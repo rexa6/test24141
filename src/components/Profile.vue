@@ -1,6 +1,5 @@
 <template>
   <div class="profile-card">
-    <!-- Аватар и никнейм -->
     <div class="profile-header">
       <img :src="user.photo" alt="User Avatar" class="avatar">
       <div class="user-details">
@@ -9,7 +8,6 @@
       </div>
     </div>
 
-    <!-- Баланс -->
     <div class="balance-section">
       <p>💰 Баланс</p>
       <h3>{{ user.balance }} TON</h3>
@@ -19,7 +17,6 @@
 
 <script>
 import axios from "axios";
-
 export default {
   data() {
     return {
@@ -74,14 +71,17 @@ export default {
 
 <style scoped>
 .profile-card {
-  max-width: 350px;
-  margin: 40px auto;
-  background: linear-gradient(135deg, #4b0082, #8a2be2);
-  border-radius: 20px;
-  color: white;
+  max-width: 100%;             /* Растягиваем по ширине как nav */
+  width: calc(100% - 40px);    /* Отступы слева и справа */
+  margin: 20px auto;           /* Центрирование */
   padding: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  border-radius: 25px;         /* Как у nav */
+  background: rgba(40, 40, 40, 0.5); /* Схожий фон с навигацией */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  color: #b0b0b0;
   font-family: 'Arial', sans-serif;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .profile-header {
@@ -95,36 +95,34 @@ export default {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 3px solid white;
   object-fit: cover;
+  border: 2px solid #b0b0b0;
 }
 
 .user-details h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
 }
 
 .user-id {
-  margin: 5px 0 0;
   font-size: 0.9rem;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .balance-section {
-  background: rgba(255,255,255,0.1);
-  border-radius: 15px;
-  padding: 15px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  border-radius: 20px;
   text-align: center;
-}
-
-.balance-section p {
-  margin: 0;
-  font-size: 1rem;
-  opacity: 0.8;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
 .balance-section h3 {
   margin: 5px 0 0;
   font-size: 1.5rem;
+  text-shadow: 0 0 10px rgba(255,255,255,0.6);
 }
 </style>
