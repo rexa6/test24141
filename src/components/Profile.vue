@@ -1,7 +1,7 @@
 <template>
-  <div v-if="user" class="profile-card">
+  <div v-if="user">
     <div class="profile-header">
-      <img :src="user.photo || defaultPhoto" alt="User Avatar" class="avatar" />
+      <img :src="user.photo || defaultPhoto" />
       <div class="user-details">
         <h2>{{ user.username || (user.first_name + ' ' + user.last_name) }}</h2>
         <p>ID: {{ user.telegram_id }}</p>
@@ -14,9 +14,7 @@
     </div>
   </div>
 
-  <div v-else class="loading">
-    Загрузка данных...
-  </div>
+  <div v-else>Загрузка данных...</div>
 </template>
 
 <script>
@@ -27,41 +25,39 @@ export default {
     return {
       user: null,
       defaultPhoto: "https://via.placeholder.com/100",
-      apiUrl: "http://100.79.141.81:8000/users/", // твой сервер
+      apiUrl: "http://100.79.141.81:8000/users/"
     };
   },
   async mounted() {
     const tg = window.Telegram?.WebApp;
-
-    if (!tg?.initDataUnsafe?.user) {
-      console.warn("Данные пользователя недоступны");
-      return;
-    }
+    if (!tg?.initDataUnsafe?.user) return;
 
     const u = tg.initDataUnsafe.user;
 
     try {
-      // Получаем пользователя с сервера
-      let response = await axios.get(`${this.apiUrl}${u.id}`);
+      // Отправляем POST, чтобы сервер создал или вернул баланс
+      const response = await axios.post(this.apiUrl, {
+        telegram_id: u.id
+      });
 
-      if (response.data && !response.data.error) {
-        // Добавляем first_name и last_name из Telegram
-        this.user = { ...response.data, first_name: u.first_name, last_name: u.last_name, username: u.username, photo: u.photo_url };
-      } else {
-        // Создаём пользователя на сервере, если его нет
-        const createRes = await axios.post(this.apiUrl, {
-          telegram_id: u.id
-        });
-        this.user = { ...createRes.data, first_name: u.first_name, last_name: u.last_name, username: u.username, photo: u.photo_url };
-      }
+      // Формируем объект пользователя для фронта
+      this.user = {
+        telegram_id: response.data.telegram_id,
+        balance: response.data.balance,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        username: u.username,
+        photo: u.photo_url
+      };
 
-      tg.expand(); // растягиваем WebApp на весь экран
+      tg.expand();
     } catch (err) {
       console.error("Ошибка при запросе к серверу:", err);
     }
-  },
+  }
 };
 </script>
+
 
 <style scoped>
 :host {
