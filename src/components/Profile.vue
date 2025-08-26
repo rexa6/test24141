@@ -13,6 +13,7 @@
       <h3>{{ user.balance }} TON</h3>
     </div>
   </div>
+
   <div v-else class="loading">
     Загрузка данных...
   </div>
@@ -40,23 +41,21 @@ export default {
     const u = tg.initDataUnsafe.user;
 
     try {
-      // пробуем получить пользователя с сервера
+      // Получаем пользователя с сервера
       let response = await axios.get(`${this.apiUrl}${u.id}`);
 
       if (response.data && !response.data.error) {
-        // добавляем first_name и last_name из Telegram для отображения
-        this.user = { ...response.data, first_name: u.first_name, last_name: u.last_name };
+        // Добавляем first_name и last_name из Telegram
+        this.user = { ...response.data, first_name: u.first_name, last_name: u.last_name, username: u.username, photo: u.photo_url };
       } else {
-        // если юзера нет → создаём
+        // Создаём пользователя на сервере, если его нет
         const createRes = await axios.post(this.apiUrl, {
-          telegram_id: u.id,
-          username: u.username,
-          photo: u.photo_url || null,
+          telegram_id: u.id
         });
-        this.user = { ...createRes.data, first_name: u.first_name, last_name: u.last_name };
+        this.user = { ...createRes.data, first_name: u.first_name, last_name: u.last_name, username: u.username, photo: u.photo_url };
       }
 
-      tg.expand();
+      tg.expand(); // растягиваем WebApp на весь экран
     } catch (err) {
       console.error("Ошибка при запросе к серверу:", err);
     }
@@ -65,7 +64,6 @@ export default {
 </script>
 
 <style scoped>
-/* Общий фон */
 :host {
   display: block;
   font-family: 'Inter', 'Arial', sans-serif;
@@ -76,12 +74,11 @@ export default {
   color: #fff;
 }
 
-/* Карточка профиля */
 .profile-card {
   width: 100%;
   max-width: 500px;
-  margin: 0 auto;
-  padding: 22px;
+  margin: 30px auto;
+  padding: 24px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 8px 25px rgba(0,0,0,0.6);
@@ -92,15 +89,14 @@ export default {
   transform: scale(1.02);
 }
 
-/* Хедер с аватаркой */
 .profile-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 25px;
 }
 
-.profile-header img {
+.avatar {
   width: 90px;
   height: 90px;
   border-radius: 50%;
@@ -109,12 +105,11 @@ export default {
   box-shadow: 0 0 15px rgba(0,0,0,0.5);
   transition: all 0.3s ease;
 }
-.profile-header img:hover {
+.avatar:hover {
   border-color: #a855f7;
   box-shadow: 0 0 20px rgba(168,85,247,0.8);
 }
 
-/* Имя и айди */
 .user-details h2 {
   margin: 0;
   font-size: 1.6rem;
@@ -125,12 +120,11 @@ export default {
 .user-details p {
   font-size: 0.9rem;
   opacity: 0.8;
-  margin: 4px 0 0;
+  margin-top: 4px;
 }
 
-/* Баланс */
 .balance-section {
-  margin-top: 15px;
+  margin-top: 20px;
   padding: 16px;
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(255,255,255,0.05));
@@ -150,14 +144,13 @@ export default {
 }
 
 .balance-section h3 {
-  margin: 6px 0 0;
+  margin-top: 6px;
   font-size: 1.8rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 0 0 12px rgba(168,85,247,0.8);
 }
 
-/* Загрузка */
 .loading {
   text-align: center;
   color: #aaa;
