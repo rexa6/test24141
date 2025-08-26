@@ -1,5 +1,5 @@
 <template>
-  <div v-if="user" class="profile-card">
+  <div v-if="user">
     <div class="profile-header">
       <img :src="user.photo || defaultPhoto" alt="User Avatar" class="avatar" />
       <div class="user-details">
@@ -13,7 +13,7 @@
       <h3>{{ user.balance || '0' }} TON</h3>
     </div>
   </div>
-  <div v-else class="loading">
+  <div v-else>
     Загрузка данных...
   </div>
 </template>
@@ -28,23 +28,26 @@ export default {
   },
   mounted() {
     const tg = window.Telegram?.WebApp;
-    if (tg?.initDataUnsafe?.user) {
-      const tgUser = tg.initDataUnsafe.user;
+    console.log("initDataUnsafe:", tg?.initDataUnsafe);
+
+    if (tg?.initDataUnsafe) {
+      const u = tg.initDataUnsafe.user || tg.initDataUnsafe;
       this.user = {
-        id: tgUser.id,
-        first_name: tgUser.first_name,
-        last_name: tgUser.last_name,
-        username: tgUser.username,
-        photo: tgUser.photo_url || null,
-        balance: 0, // если хочешь, можно потом подтянуть из tg.storage или API
+        id: u.id,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        username: u.username,
+        photo: u.photo_url || null,
+        balance: 0,
       };
-      tg.expand(); // расширяем WebApp на весь экран
+      tg.expand();
     } else {
-      console.warn("Не WebApp Telegram, данные не отображаются");
+      console.warn("Данные пользователя недоступны");
     }
   },
 };
 </script>
+
 
 <style scoped>
 .profile-card {
