@@ -1,16 +1,16 @@
 <template>
   <div v-if="user" class="profile-card">
     <div class="profile-header">
-      <img :src="user.photo" alt="User Avatar" class="avatar" />
+      <img :src="user.photo || defaultPhoto" alt="User Avatar" class="avatar" />
       <div class="user-details">
-        <h2>{{ user.username }}</h2>
-        <p class="user-id">ID: {{ user.telegram_id }}</p>
+        <h2>{{ user.username || (user.first_name + ' ' + user.last_name) }}</h2>
+        <p class="user-id">ID: {{ user.id }}</p>
       </div>
     </div>
 
     <div class="balance-section">
       <p>💰 Баланс</p>
-      <h3>{{ user.balance }} TON</h3>
+      <h3>{{ user.balance || '0' }} TON</h3>
     </div>
   </div>
   <div v-else class="loading">
@@ -19,44 +19,38 @@
 </template>
 
 <script>
-import axios from "axios";
-
 export default {
   data() {
     return {
-      telegram_id: null,
       user: null,
-      apiUrl: "http://100.79.141.81:8000/users/"
+      defaultPhoto: "https://via.placeholder.com/100", // если фото нет
     };
   },
-  methods: {
-    async fetchUser() {
-      if (!this.telegram_id) return;
-      try {
-        const response = await axios.get(`${this.apiUrl}${this.telegram_id}`);
-        this.user = response.data;
-      } catch (error) {
-        console.error("Ошибка при получении данных юзера:", error);
-      }
+  mounted() {
+    // Проверяем, есть ли Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user) {
+      const tgUser = tg.initDataUnsafe.user;
+      this.user = {
+        id: tgUser.id,
+        first_name: tgUser.first_name,
+        last_name: tgUser.last_name,
+        username: tgUser.username,
+        photo: tgUser.photo_url || null, // если есть фото
+        balance: 0, // по умолчанию
+      };
+    } else {
+      console.warn("Не WebApp Telegram, используем тестовые данные");
+      this.user = {
+        id: 132412215,
+        first_name: "Test",
+        last_name: "User",
+        username: "test_user",
+        photo: null,
+        balance: 0,
+      };
     }
   },
-  mounted() {
-    // Получаем tg_id из URL
-    const params = new URLSearchParams(window.location.search);
-    const tg_id = params.get("tg_id");
-    if (tg_id) {
-      this.telegram_id = tg_id;
-      this.fetchUser();
-    } else if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-      const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-      this.telegram_id = tgUser.id;
-      this.fetchUser();
-    } else {
-      console.warn("Не WebApp Telegram, тестовый ID");
-      this.telegram_id = 132412215;
-      this.fetchUser();
-    }
-  }
 };
 </script>
 
