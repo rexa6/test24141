@@ -23,11 +23,10 @@ export default {
   data() {
     return {
       user: null,
-      defaultPhoto: "https://via.placeholder.com/100", // если фото нет
+      defaultPhoto: "https://via.placeholder.com/100",
     };
   },
   mounted() {
-    // Проверяем, есть ли Telegram WebApp
     const tg = window.Telegram?.WebApp;
     if (tg?.initDataUnsafe?.user) {
       const tgUser = tg.initDataUnsafe.user;
@@ -36,19 +35,12 @@ export default {
         first_name: tgUser.first_name,
         last_name: tgUser.last_name,
         username: tgUser.username,
-        photo: tgUser.photo_url || null, // если есть фото
-        balance: 0, // по умолчанию
+        photo: tgUser.photo_url || null,
+        balance: 0, // можно позже подтянуть из storage или API
       };
     } else {
-      console.warn("Не WebApp Telegram, используем тестовые данные");
-      this.user = {
-        id: 132412215,
-        first_name: "Test",
-        last_name: "User",
-        username: "test_user",
-        photo: null,
-        balance: 0,
-      };
+      // Не показываем тестового пользователя
+      console.warn("Не WebApp Telegram, данные не отображаются");
     }
   },
 };
