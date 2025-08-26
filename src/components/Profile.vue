@@ -36,10 +36,10 @@ export default {
         last_name: tgUser.last_name,
         username: tgUser.username,
         photo: tgUser.photo_url || null,
-        balance: 0, // можно позже подтянуть из storage или API
+        balance: 0, // если хочешь, можно потом подтянуть из tg.storage или API
       };
+      tg.expand(); // расширяем WebApp на весь экран
     } else {
-      // Не показываем тестового пользователя
       console.warn("Не WebApp Telegram, данные не отображаются");
     }
   },
