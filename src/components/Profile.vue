@@ -1,3 +1,23 @@
+<template>
+  <div v-if="user" class="profile-card">
+    <div class="profile-header">
+      <img :src="user.photo" alt="User Avatar" class="avatar" />
+      <div class="user-details">
+        <h2>{{ user.username }}</h2>
+        <p class="user-id">ID: {{ user.telegram_id }}</p>
+      </div>
+    </div>
+
+    <div class="balance-section">
+      <p>💰 Баланс</p>
+      <h3>{{ user.balance }} TON</h3>
+    </div>
+  </div>
+  <div v-else class="loading">
+    Загрузка данных...
+  </div>
+</template>
+
 <script>
 import axios from "axios";
 
@@ -21,14 +41,13 @@ export default {
     }
   },
   mounted() {
-    // Читаем tg_id из query string
+    // Получаем tg_id из URL
     const params = new URLSearchParams(window.location.search);
     const tg_id = params.get("tg_id");
     if (tg_id) {
       this.telegram_id = tg_id;
       this.fetchUser();
     } else if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-      // fallback на initDataUnsafe
       const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
       this.telegram_id = tgUser.id;
       this.fetchUser();
@@ -41,15 +60,14 @@ export default {
 };
 </script>
 
-
 <style scoped>
 .profile-card {
-  max-width: 100%;             /* Растягиваем по ширине как nav */
-  width: calc(100% - 40px);    /* Отступы слева и справа */
-  margin: 20px auto;           /* Центрирование */
+  max-width: 100%;
+  width: calc(100% - 40px);
+  margin: 20px auto;
   padding: 20px;
-  border-radius: 25px;         /* Как у nav */
-  background: rgba(40, 40, 40, 0.5); /* Схожий фон с навигацией */
+  border-radius: 25px;
+  background: rgba(40, 40, 40, 0.5);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
   color: #b0b0b0;
@@ -97,5 +115,11 @@ export default {
   margin: 5px 0 0;
   font-size: 1.5rem;
   text-shadow: 0 0 10px rgba(255,255,255,0.6);
+}
+
+.loading {
+  text-align: center;
+  color: #fff;
+  margin-top: 50px;
 }
 </style>
