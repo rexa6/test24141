@@ -1,3 +1,23 @@
+<template>
+  <div v-if="user" class="profile-card">
+    <div class="profile-header">
+      <img :src="user.photo || defaultPhoto" alt="User Avatar" class="avatar" />
+      <div class="user-details">
+        <h2>{{ user.username || (user.first_name + ' ' + user.last_name) }}</h2>
+        <p>ID: {{ user.telegram_id }}</p>
+      </div>
+    </div>
+
+    <div class="balance-section">
+      <p>💰 Баланс</p>
+      <h3>{{ user.balance }} TON</h3>
+    </div>
+  </div>
+  <div v-else class="loading">
+    Загрузка данных...
+  </div>
+</template>
+
 <script>
 import axios from "axios";
 
@@ -11,40 +31,38 @@ export default {
   },
   async mounted() {
     const tg = window.Telegram?.WebApp;
-    console.log("initDataUnsafe:", tg?.initDataUnsafe);
 
-    if (tg?.initDataUnsafe?.user) {
-      const u = tg.initDataUnsafe.user;
+    if (!tg?.initDataUnsafe?.user) {
+      console.warn("Данные пользователя недоступны");
+      return;
+    }
 
-      try {
-        // сначала пробуем достать юзера с сервера
-        let response = await axios.get(`${this.apiUrl}${u.id}`);
+    const u = tg.initDataUnsafe.user;
 
-        if (response.data && !response.data.error) {
-          // ✅ сервер вернул юзера → используем его целиком
-          this.user = response.data;
-        } else {
-          // ❌ нет такого юзера → создаём
-          console.warn("Юзер не найден на сервере, создаём...");
-          const createRes = await axios.post(this.apiUrl, {
-            telegram_id: u.id,
-            username: u.username,
-            photo: u.photo_url || null,
-          });
-          this.user = createRes.data; // ✅ сразу юзер с балансом
-        }
-      } catch (err) {
-        console.error("Ошибка при запросе к серверу:", err);
+    try {
+      // пробуем получить пользователя с сервера
+      let response = await axios.get(`${this.apiUrl}${u.id}`);
+
+      if (response.data && !response.data.error) {
+        // добавляем first_name и last_name из Telegram для отображения
+        this.user = { ...response.data, first_name: u.first_name, last_name: u.last_name };
+      } else {
+        // если юзера нет → создаём
+        const createRes = await axios.post(this.apiUrl, {
+          telegram_id: u.id,
+          username: u.username,
+          photo: u.photo_url || null,
+        });
+        this.user = { ...createRes.data, first_name: u.first_name, last_name: u.last_name };
       }
 
       tg.expand();
-    } else {
-      console.warn("Данные пользователя недоступны");
+    } catch (err) {
+      console.error("Ошибка при запросе к серверу:", err);
     }
   },
 };
 </script>
-
 
 <style scoped>
 /* Общий фон */
