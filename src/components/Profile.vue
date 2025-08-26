@@ -1,23 +1,3 @@
-<template>
-  <div v-if="user">
-    <div class="profile-header">
-      <img :src="user.photo || defaultPhoto" alt="User Avatar" />
-      <div class="user-details">
-        <h2>{{ user.username || (user.first_name + ' ' + user.last_name) }}</h2>
-        <p>ID: {{ user.telegram_id }}</p>
-      </div>
-    </div>
-
-    <div class="balance-section">
-      <p>💰 Баланс</p>
-      <h3>{{ user.balance }} TON</h3>
-    </div>
-  </div>
-  <div v-else>
-    Загрузка данных...
-  </div>
-</template>
-
 <script>
 import axios from "axios";
 
@@ -36,33 +16,25 @@ export default {
     if (tg?.initDataUnsafe?.user) {
       const u = tg.initDataUnsafe.user;
 
-      // собираем данные
-      this.user = {
-        telegram_id: u.id, // сохраняем как telegram_id
-        first_name: u.first_name,
-        last_name: u.last_name,
-        username: u.username,
-        photo: u.photo_url || null,
-        balance: 0,
-      };
-
       try {
-        // запрос баланса с сервера по telegram_id
-        const response = await axios.get(`${this.apiUrl}${this.user.telegram_id}`);
+        // сначала пробуем достать юзера с сервера
+        let response = await axios.get(`${this.apiUrl}${u.id}`);
+
         if (response.data && !response.data.error) {
-          this.user.balance = response.data.balance;
+          // ✅ сервер вернул юзера → используем его целиком
+          this.user = response.data;
         } else {
-          console.warn("Юзер не найден на сервере, надо создать");
-          // если юзера нет в БД → создаём его
+          // ❌ нет такого юзера → создаём
+          console.warn("Юзер не найден на сервере, создаём...");
           const createRes = await axios.post(this.apiUrl, {
-            telegram_id: this.user.telegram_id,
-            username: this.user.username,
-            photo: this.user.photo,
+            telegram_id: u.id,
+            username: u.username,
+            photo: u.photo_url || null,
           });
-          this.user.balance = createRes.data.balance ?? 1000;
+          this.user = createRes.data; // ✅ сразу юзер с балансом
         }
       } catch (err) {
-        console.error("Ошибка при получении данных с сервера:", err);
+        console.error("Ошибка при запросе к серверу:", err);
       }
 
       tg.expand();
@@ -72,6 +44,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 /* Общий фон */
