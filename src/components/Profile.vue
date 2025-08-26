@@ -1,16 +1,16 @@
 <template>
   <div v-if="user">
     <div class="profile-header">
-      <img :src="user.photo || defaultPhoto" alt="User Avatar" class="avatar" />
+      <img :src="user.photo || defaultPhoto" alt="User Avatar" />
       <div class="user-details">
         <h2>{{ user.username || (user.first_name + ' ' + user.last_name) }}</h2>
-        <p class="user-id">ID: {{ user.id }}</p>
+        <p>ID: {{ user.telegram_id }}</p>
       </div>
     </div>
 
     <div class="balance-section">
       <p>💰 Баланс</p>
-      <h3>{{ user.balance || '0' }} TON</h3>
+      <h3>{{ user.balance }} TON</h3>
     </div>
   </div>
   <div v-else>
@@ -19,27 +19,52 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
       user: null,
       defaultPhoto: "https://via.placeholder.com/100",
+      apiUrl: "http://100.79.141.81:8000/users/", // твой сервер
     };
   },
-  mounted() {
+  async mounted() {
     const tg = window.Telegram?.WebApp;
     console.log("initDataUnsafe:", tg?.initDataUnsafe);
 
-    if (tg?.initDataUnsafe) {
-      const u = tg.initDataUnsafe.user || tg.initDataUnsafe;
+    if (tg?.initDataUnsafe?.user) {
+      const u = tg.initDataUnsafe.user;
+
+      // собираем данные
       this.user = {
-        id: u.id,
+        telegram_id: u.id, // сохраняем как telegram_id
         first_name: u.first_name,
         last_name: u.last_name,
         username: u.username,
         photo: u.photo_url || null,
         balance: 0,
       };
+
+      try {
+        // запрос баланса с сервера по telegram_id
+        const response = await axios.get(`${this.apiUrl}${this.user.telegram_id}`);
+        if (response.data && !response.data.error) {
+          this.user.balance = response.data.balance;
+        } else {
+          console.warn("Юзер не найден на сервере, надо создать");
+          // если юзера нет в БД → создаём его
+          const createRes = await axios.post(this.apiUrl, {
+            telegram_id: this.user.telegram_id,
+            username: this.user.username,
+            photo: this.user.photo,
+          });
+          this.user.balance = createRes.data.balance ?? 1000;
+        }
+      } catch (err) {
+        console.error("Ошибка при получении данных с сервера:", err);
+      }
+
       tg.expand();
     } else {
       console.warn("Данные пользователя недоступны");
@@ -47,7 +72,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .profile-card {
